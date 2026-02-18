@@ -62,14 +62,14 @@ EOF
 # 6. Install the Helm chart
 echo "-> Installing Helm chart..."
 helm install todo1 oci://ghcr.io/holyshoes2283/todolist/todolist \
-  --version 0.3.0 \
+  --version 0.3.1 \
   -f temp-ip-routing.yaml \
   --set secret.rootPassword=Test123456
 
 # 7. Clean up the temporary file
 echo "-> Cleaning up temporary files..."
 rm temp-ip-routing.yaml
-
+minikube tunnel
 echo "======================================================"
 echo "🎉 Installation complete!"
 echo "⚠️ IMPORTANT: Please run 'minikube tunnel' in a separate terminal."
