@@ -4,7 +4,6 @@ echo "======================================================"
 echo "🚀 Starting automated setup for To-Do List project..."
 echo "======================================================"
 
-# 1. NEW: Check if Minikube is actually running
 echo "-> Checking Minikube status..."
 minikube status >/dev/null 2>&1
 if [ $? -ne 0 ]; then
@@ -14,20 +13,32 @@ else
     echo "   Minikube is already running!"
 fi
 
-# 2. Enable the Ingress addon
 echo "-> Enabling Minikube Ingress addon..."
 minikube addons enable ingress
 
-# 3. Pull the Docker image
 echo "-> Pulling the adapter Docker image..."
 docker pull ghcr.io/holyshoes2283/todolist-adapter:v1
 
-# 4. Grab the Minikube IP dynamically
-echo "-> Fetching current Minikube IP..."
-export CURRENT_IP=$(minikube ip)
-echo "   Detected IP: $CURRENT_IP"
+# ---------------------------------------------------------
+# THE UNIVERSAL IP DETECTOR
+# ---------------------------------------------------------
+echo "-> Determining the correct routing IP..."
+RAW_IP=$(minikube ip)
+OS_TYPE=$(uname -s)
 
-# 5. Generating dynamic routing rules
+if [[ "$OS_TYPE" == "Darwin"* ]] || [[ "$OS_TYPE" == "MINGW"* ]] || [[ "$OS_TYPE" == "CYGWIN"* ]]; then
+    echo "   [!] Mac/Windows environment detected."
+    echo "   [!] The tunnel will bind to localhost."
+    export CURRENT_IP="127.0.0.1"
+else
+    echo "   [!] Linux environment detected."
+    echo "   [!] Using raw Minikube IP."
+    export CURRENT_IP=$RAW_IP
+fi
+
+echo "   Final Routing IP: $CURRENT_IP"
+# ---------------------------------------------------------
+
 echo "-> Generating dynamic routing rules..."
 cat <<EOF > temp-ip-routing.yaml
 frontend:
@@ -59,17 +70,15 @@ ingress:
                   number: 80
 EOF
 
-# 6. Install the Helm chart
 echo "-> Installing Helm chart..."
 helm install todo1 oci://ghcr.io/holyshoes2283/todolist/todolist \
   --version 0.3.1 \
   -f temp-ip-routing.yaml \
   --set secret.rootPassword=Test123456
 
-# 7. Clean up the temporary file
 echo "-> Cleaning up temporary files..."
 rm temp-ip-routing.yaml
-minikube tunnel
+
 echo "======================================================"
 echo "🎉 Installation complete!"
 echo "⚠️ IMPORTANT: Please run 'minikube tunnel' in a separate terminal."
