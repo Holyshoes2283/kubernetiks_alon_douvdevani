@@ -1,3 +1,5 @@
 run install.sh 
-frontend will be available on http://app.192.168.64.36.nip.io
-backend is on http://api.192.168.64.36.nip.io
+
+Then run kubectl tunnel at a different terminal (RUNS AUTOMATICALLY, GIVE IT PASSWORD)
+
+Accessible Url will print at the end of install.sh and in file accessible-ip-addresses.txt
